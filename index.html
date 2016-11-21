@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title></title>
+</head>
+<body>
+  
+  <h1>Do you speak ...?</h1>
+  <h2>window.navigator.languages</h2>
+  <div id="languages">  </div>
+  <h2>window.navigator.language</h2>
+  <div id="language"></div>
+  <h2>window.navigator.browserLanguage</h2>
+  <div id="browserLanguage"></div>
+  <h2>window.navigator.systemLanguage</h2>
+  <div id="systemLanguage"></div>
+  <h2>window.navigator.userLanguage</h2>
+  <div id="userLanguage"></div>
+  <h2>Zusammengestellte Langs Liste</h2>
+  <div id="langs"></div>
+  <script>
+    var showVariable = function(key) {
+      document.getElementById(key).innerHTML = window.navigator[key];
+    }
+    showVariable('languages');
+    showVariable('language');
+    showVariable('browserLanguage');
+    showVariable('systemLanguage');
+    showVariable('userLanguage');
+  </script>
+  
+  <script>
+    var collectBrowserLanguages = function () {
+      var langs = [];
+      if (window.navigator.languages) {
+        for (var i = 0; i < window.navigator.languages.length; i++) {
+          langs.push(window.navigator.languages[i]);
+        }
+      }
+      var browserLanguagePropertyKeys = ['language', 'browserLanguage', 'systemLanguage', 'userLanguage'];
+      for (var i = 0; i < browserLanguagePropertyKeys.length; i++) {
+        var lang = window.navigator[browserLanguagePropertyKeys[i]];
+        if (lang && lang.length) {
+          langs.push(lang);
+        }
+      }
+      return langs;
+    };
+    var nextLang = function(langs, langIndex) {
+      $translate.use(langs[langIndex]).then(
+        function() {
+          console.log('Sprache ' + langs[langIndex] + ' eingestellt.');
+        }
+      ).catch(
+        function() {
+          console.log('Sprache ' + langs[langIndex] + ' wurde nicht akzeptiert!');
+          if (langIndex < langs.length) {
+            nextLang(langs, langIndex + 1);
+          }
+        }
+      );
+    };
+    var langs = collectBrowserLanguages();
+    document.getElementById('langs').innerHTML = langs;
+
+  </script>
+
+</body>
+</html>

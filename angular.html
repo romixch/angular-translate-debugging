@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html ng-app="LanguageApp">
+<head>
+<meta charset="utf-8" />
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-translate/2.13.0/angular-translate.js"></script>
+<title></title>
+</head>
+<body>
+  <div ng-controller="LangController as controller">
+  
+    <h1>{{'TITLE' | translate }}</h1>
+    <button ng-click="controller.negotiate()">Negotiate</button>
+    <button ng-click="controller.use('fr-ch')">Français</button>
+    <button ng-click="controller.use('de-ch')">Deutsch</button>
+    <div>
+      <div ng-repeat="log in controller.logs">
+        {{log.time}}: {{log.text}}
+      </div>
+    </div>
+    
+  </div>
+  
+  <script>
+    var app = angular.module('LanguageApp', ['pascalprecht.translate']);
+    app.config(['$translateProvider', function ($translateProvider) {
+      $translateProvider.translations('fr-CH', {
+        'TITLE': 'Est ce que tu parle Français?',
+        'FOO': 'Ca c\'est un paragraph'
+      });
+      $translateProvider.translations('de-CH', {
+        'TITLE': 'Sprichst du Deutsch?',
+        'FOO': 'Das ist ein Paragraf'
+      });
+      $translateProvider.registerAvailableLanguageKeys(['de-CH', 'fr-CH'], {
+        'fr*': 'fr-CH',
+        'de*': 'de-CH'
+      });
+      $translateProvider.preferredLanguage('de-CH');
+      
+    }]);
+    app.controller('LangController', function($window, $translate, $location) {
+      this.logs = [];
+      var push = function(entry) {
+        this.logs.push({
+          'time': new Date(),
+          'text': entry
+        });
+      }.bind(this);
+      var logger = {
+        'push': push
+      };
+      logger.push("Started logging");
+      
+      this.use = function(lang) {
+        logger.push('Try to set ' + lang);
+        $translate.use(lang).then(function(accepted) {
+          logger.push('Successfully configured ' + accepted);
+        }).catch(function (rejected) {
+          logger.push('Language ' + rejected + ' was rejected!');
+        });
+      }
+      
+      this.negotiate = function() {
+        var fixCase = function (langKey) {
+          var newKey = '';
+          var splitted = langKey.split('-');
+          newKey += splitted[0].toLowerCase();
+          if (splitted.length > 1) {
+            newKey += '-' + splitted[1].toUpperCase();
+          }
+          return newKey;
+        };
+        var collectBrowserLanguages = function () {
+          var langs = [];
+          if (angular.isArray($window.navigator.languages)) {
+            for (var i = 0; i < $window.navigator.languages.length; i++) {
+              langs.push(fixCase($window.navigator.languages[i]));
+            }
+          }
+          var browserLanguagePropertyKeys = ['language', 'browserLanguage', 'systemLanguage', 'userLanguage'];
+          for (var i = 0; i < browserLanguagePropertyKeys.length; i++) {
+            var lang = $window.navigator[browserLanguagePropertyKeys[i]];
+            if (lang && lang.length) {
+              langs.push(fixCase(lang));
+            }
+          }
+          return langs;
+        };
+        var nextLang = function(langs, langIndex) {
+          $translate.use(langs[langIndex]).then(
+            function(accepted) {
+              logger.push('Successfully configured ' + accepted);
+            }
+          ).catch(
+            function(rejected) {
+              logger.push('Language ' + rejected + ' was rejected!');
+              if (langIndex + 1 < langs.length) {
+                nextLang(langs, langIndex + 1);
+              }
+            }
+          );
+        };
+        if (!$location.search().lang) {
+          var langs = collectBrowserLanguages();
+          logger.push('Negotiating following languages: ' + langs);
+          nextLang(langs, 0);
+        }
+      }
+    });
+
+  </script>
+
+</body>
+</html>
