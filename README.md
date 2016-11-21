@@ -16,7 +16,7 @@ There are two files:
 - index.html: Shows you the content of different language settings accessible from your browsers JavaScript engine.
 - angular.html: Contains my current approach to work around the mentioned issues.
 
-## Cool! Did you deploy those two files somewhere
+## Cool! Did you deploy those two files somewhere?
 
 Oh, glad you asked! :-)
 
